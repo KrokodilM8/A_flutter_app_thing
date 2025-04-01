@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:sensors_plus/sensors_plus.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const WindApp());
 }
 
@@ -87,10 +88,10 @@ class _WindPageState extends State<WindPage> {
           _windDeg = data['wind']['deg']?.toInt();
         });
       } else {
-        showError('Erreur : ${response.statusCode}');
+        showError('Error : ${response.statusCode}');
       }
     } catch (e) {
-      showError('Erreur de connexion');
+      showError('Connection error');
     } finally {
       setState(() {
         _loading = false;
@@ -107,22 +108,22 @@ class _WindPageState extends State<WindPage> {
   String getWindDirection(int? deg) {
     if (deg == null) return '-';
     const directions = [
-      'Nord',
-      'Nord / Nord-Est',
-      'Nord Est',
-      'Est / Nord-Est',
+      'North',
+      'North / North-Est',
+      'North Est',
+      'Est / North-Est',
       'Est',
-      'Est / Sud-Est',
-      'Sud / Est',
-      'Sud / Sud-Est',
-      'Sud',
-      'Sud / Sud-Ouest',
-      'Sud / Ouest',
-      'Ouest / Sud-Ouest',
-      'Ouest',
-      'Ouest / Nord-Ouest',
-      'Nord / Ouest',
-      'Nord / Nord-Ouest',
+      'Est / South-Est',
+      'South / Est',
+      'South / South-Est',
+      'South',
+      'South / South-West',
+      'South / West',
+      'West / South-West',
+      'West',
+      'West / North-West',
+      'North / West',
+      'North / North-West',
     ];
     return directions[((deg + 11.25) ~/ 22.5) % 16];
   }
@@ -130,7 +131,7 @@ class _WindPageState extends State<WindPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Données Vent')),
+      appBar: AppBar(title: const Text('Wind Data')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -139,7 +140,7 @@ class _WindPageState extends State<WindPage> {
             TextField(
               controller: _cityController,
               decoration: const InputDecoration(
-                labelText: 'Ville',
+                labelText: 'City',
                 border: OutlineInputBorder(),
               ),
               onSubmitted: fetchWindData,
@@ -151,7 +152,7 @@ class _WindPageState extends State<WindPage> {
               child:
                   _loading
                       ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('Obtenir les données'),
+                      : const Text('Get Wind Data'),
             ),
             const SizedBox(height: 16),
             Expanded(
@@ -163,12 +164,12 @@ class _WindPageState extends State<WindPage> {
                       if (_windSpeed != null && _windDeg != null) ...[
                         const SizedBox(height: 16),
                         Text(
-                          'Vitesse: $_windSpeed m/s',
+                          'Wind Speed: $_windSpeed m/s',
                           style: Theme.of(context).textTheme.titleLarge,
                           textAlign: TextAlign.center,
                         ),
                         Text(
-                          'Direction: ${getWindDirection(_windDeg)} ($_windDeg°)',
+                          'Wind Direction: ${getWindDirection(_windDeg)} ($_windDeg°)',
                           style: Theme.of(context).textTheme.titleLarge,
                           textAlign: TextAlign.center,
                         ),
@@ -187,7 +188,7 @@ class _WindPageState extends State<WindPage> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'Orientation téléphone : ${_deviceDirection.toStringAsFixed(1)}°',
+                          'Phone direction : ${_deviceDirection.toStringAsFixed(1)}°',
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 16),
@@ -238,23 +239,6 @@ class CompassPainter extends CustomPainter {
     );
 
     canvas.drawLine(center, needleEnd, paintNeedle);
-
-    void drawDirection(String text, Offset offset) {
-      final tp = TextPainter(
-        text: TextSpan(
-          text: text,
-          style: const TextStyle(fontSize: 16, color: Colors.black),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      tp.layout();
-      tp.paint(canvas, offset);
-    }
-
-    drawDirection('N', Offset(center.dx - 8, center.dy - radius + 4));
-    drawDirection('S', Offset(center.dx - 8, center.dy + radius - 20));
-    drawDirection('E', Offset(center.dx + radius - 16, center.dy - 8));
-    drawDirection('O', Offset(center.dx - radius + 4, center.dy - 8));
   }
 
   @override
