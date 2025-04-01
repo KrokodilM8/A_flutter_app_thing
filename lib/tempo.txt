@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:sensors_plus/sensors_plus.dart';
 
 void main() {
   runApp(const WindApp());
@@ -11,7 +9,7 @@ void main() {
 
 class WindApp extends StatelessWidget {
   const WindApp({super.key});
-
+n
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -41,32 +39,6 @@ class _WindPageState extends State<WindPage> {
   double? _windSpeed;
   int? _windDeg;
   bool _loading = false;
-  double _deviceDirection = 0;
-
-  StreamSubscription<MagnetometerEvent>? _magnetometerSubscription;
-  DateTime _lastUpdate = DateTime.now();
-
-  @override
-  void initState() {
-    super.initState();
-    _magnetometerSubscription = magnetometerEvents.listen((event) {
-      final now = DateTime.now();
-      if (now.difference(_lastUpdate).inMilliseconds > 200) {
-        final angle = atan2(event.y, event.x) * (180 / pi);
-        final heading = (angle + 360) % 360;
-        setState(() {
-          _deviceDirection = heading;
-        });
-        _lastUpdate = now;
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _magnetometerSubscription?.cancel();
-    super.dispose();
-  }
 
   Future<void> fetchWindData(String city) async {
     setState(() {
@@ -153,50 +125,23 @@ class _WindPageState extends State<WindPage> {
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text('Obtenir les données'),
             ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: Scrollbar(
-                thumbVisibility: true,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      if (_windSpeed != null && _windDeg != null) ...[
-                        const SizedBox(height: 16),
-                        Text(
-                          'Vitesse: $_windSpeed m/s',
-                          style: Theme.of(context).textTheme.titleLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          'Direction: ${getWindDirection(_windDeg)} ($_windDeg°)',
-                          style: Theme.of(context).textTheme.titleLarge,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-                        Center(
-                          child: SizedBox(
-                            height: 220,
-                            width: 220,
-                            child: CustomPaint(
-                              painter: CompassPainter(
-                                windDeg: _windDeg!,
-                                deviceOrientation: _deviceDirection,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Orientation téléphone : ${_deviceDirection.toStringAsFixed(1)}°',
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ],
-                  ),
-                ),
+            const SizedBox(height: 32),
+            if (_windSpeed != null && _windDeg != null) ...[
+              Text(
+                'Vitesse: $_windSpeed m/s',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),
+              Text(
+                'Direction: ${getWindDirection(_windDeg)} ($_windDeg°)',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                height: 200,
+                width: 200,
+                child: CustomPaint(painter: CompassPainter(windDeg: _windDeg!)),
+              ),
+            ],
           ],
         ),
       ),
@@ -206,9 +151,8 @@ class _WindPageState extends State<WindPage> {
 
 class CompassPainter extends CustomPainter {
   final int windDeg;
-  final double deviceOrientation;
 
-  CompassPainter({required this.windDeg, required this.deviceOrientation});
+  CompassPainter({required this.windDeg});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -229,12 +173,12 @@ class CompassPainter extends CustomPainter {
 
     canvas.drawCircle(center, radius, paintCircle);
 
-    final relativeAngle = ((windDeg - deviceOrientation) - 90) * pi / 180;
+    final angle = (windDeg - 90) * pi / 180; // -90 pour pointer vers le haut
     final needleLength = radius * 0.9;
 
     final needleEnd = Offset(
-      center.dx + needleLength * cos(relativeAngle),
-      center.dy + needleLength * sin(relativeAngle),
+      center.dx + needleLength * cos(angle),
+      center.dy + needleLength * sin(angle),
     );
 
     canvas.drawLine(center, needleEnd, paintNeedle);
@@ -254,12 +198,11 @@ class CompassPainter extends CustomPainter {
     drawDirection('N', Offset(center.dx - 8, center.dy - radius + 4));
     drawDirection('S', Offset(center.dx - 8, center.dy + radius - 20));
     drawDirection('E', Offset(center.dx + radius - 16, center.dy - 8));
-    drawDirection('O', Offset(center.dx - radius + 4, center.dy - 8));
+    drawDirection('O', Offset(center.dx - radius + 4, center.dy - 8)); // Ouest
   }
 
   @override
   bool shouldRepaint(covariant CompassPainter oldDelegate) {
-    return oldDelegate.windDeg != windDeg ||
-        oldDelegate.deviceOrientation != deviceOrientation;
+    return oldDelegate.windDeg != windDeg;
   }
 }
