@@ -1,0 +1,144 @@
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+void main() {
+  runApp(const WindApp());
+}
+
+class WindApp extends StatelessWidget {
+  const WindApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'API Vent',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData(brightness: Brightness.dark),
+      themeMode: ThemeMode.system,
+      home: const WindPage(),
+    );
+  }
+}
+
+class WindPage extends StatefulWidget {
+  const WindPage({super.key});
+
+  @override
+  State<WindPage> createState() => _WindPageState();
+}
+
+class _WindPageState extends State<WindPage> {
+  final TextEditingController _cityController = TextEditingController(
+    text: 'Paris',
+  );
+  double? _windSpeed;
+  int? _windDeg;
+  bool _loading = false;
+
+  Future<void> fetchWindData(String city) async {
+    setState(() {
+      _loading = true;
+    });
+    //https: //api.openweathermap.org/data/2.5/weather?q=Paris&appid=a3baa5aed122cb20874a1a1710ea7586&units=metric
+
+    const apiKey = 'a3baa5aed122cb20874a1a1710ea7586';
+    final url = Uri.parse(
+      'https://api.openweathermap.org/data/2.5/weather?q=$city&appid=$apiKey&units=metric',
+    );
+
+    try {
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _windSpeed = data['wind']['speed']?.toDouble();
+          _windDeg = data['wind']['deg']?.toInt();
+        });
+      } else {
+        showError('Erreur : ${response.statusCode}');
+      }
+    } catch (e) {
+      showError('Erreur de connexion');
+    } finally {
+      setState(() {
+        _loading = false;
+      });
+    }
+  }
+
+  void showError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  String getWindDirection(int? deg) {
+    if (deg == null) return '-';
+    const directions = [
+      'Nord',
+      'Nord / Nord-Est',
+      'Nord Est',
+      'Est / Nord-Est',
+      'Est',
+      'Est / Sud-Est',
+      'Sud / Est',
+      'Sud / Sud-Est',
+      'Sud',
+      'Sud / Sud-Ouest',
+      'Sud / Ouest',
+      'Ouest / Sud-Ouest',
+      'Ouest',
+      'Ouest / Nord-Ouest',
+      'Nord / Ouest',
+      'Nord / Nord-Ouest',
+    ];
+    return directions[((deg + 11.25) ~/ 22.5) % 16];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Données Vent')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _cityController,
+              decoration: const InputDecoration(
+                labelText: 'Ville',
+                border: OutlineInputBorder(),
+              ),
+              onSubmitted: fetchWindData,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed:
+                  _loading ? null : () => fetchWindData(_cityController.text),
+              child:
+                  _loading
+                      ? const CircularProgressIndicator(color: Colors.white)
+                      : const Text('Obtenir les données'),
+            ),
+            const SizedBox(height: 32),
+            if (_windSpeed != null && _windDeg != null) ...[
+              Text(
+                'Vitesse: $_windSpeed m/s',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              Text(
+                'Direction: ${getWindDirection(_windDeg)} ($_windDeg°)',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}

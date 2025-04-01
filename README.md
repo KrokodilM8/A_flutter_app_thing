@@ -1,34 +1,16 @@
-<!--
-SPDX-FileCopyrightText: 2025 Benoît Rolandeau <benoit.rolandeau@allcircuits.com>
+# app_our_things
 
-SPDX-License-Identifier: MIT
--->
+A new Flutter project.
 
-# ESAIP Lessons App <!-- omit from toc -->
+## Getting Started
 
-## Table of contents
+This project is a starting point for a Flutter application.
 
-- [Table of contents](#table-of-contents)
-- [Presentation](#presentation)
-- [Create your app](#create-your-app)
+A few resources to get you started if this is your first Flutter project:
 
-## Presentation
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
 
-This is the base repository for your flutter applications.
-
-## Create your app
-
-When you create your flutter app, flutter will create a sub directory for your app.
-
-You will have to copy/paste the content of this directory in the root of your repository.
-
-In VS Code, the project will be created with all the system folders:
-
-- android
-- ios
-- linux
-- macos
-- web
-- windows
-
-Remove the folders you don't need.
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
